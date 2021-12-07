@@ -34,7 +34,6 @@ def score_board(bingo_board):
     return total
 
 
-
 for num in call_order:
     removals = []
     for position, board in enumerate(boards):
