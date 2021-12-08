@@ -37,9 +37,10 @@ for signal in signals:
         9: 'ABCDFG'
     }
     signal_line = signal[0].split(' ')
-    print(signal_line)
+
     signal_line.sort(key=len)
-    print(signal_line)
+
+    # Start with narrowing down wires based on the easy digits
     for c in 'CF':
         wire_options[c] = [l for l in wire_options[c] if l.lower() in signal_line[0]]
     for c in 'ACF':
@@ -51,36 +52,35 @@ for signal in signals:
         if wire_options['C'][0] in digit and wire_options['C'][1] in digit:
             for c in 'ADG':
                 wire_options[c] = [l for l in wire_options[c] if l.lower() in digit and l not in wire_options['C']]
+
     # We now know A and D
     final = {'A': wire_options['A'][0], 'D': wire_options['D'][0]}
     letter_counts = Counter(c for c in ''.join(signal_line).replace(' ', ''))
-    print(letter_counts)
-    # There should be 6 x B
-    # There should be 4 x E
-    # There should be 9 x F
+
     for key, value in letter_counts.items():
+        # There should be 6 x B
         if value == 6:
             final['B'] = key
+        # There should be 4 x E
         elif value == 4:
             final['E'] = key
+        # There should be 9 x F
         elif value == 9:
             final['F'] = key
+        # A and C have 8 (but we know A)
         elif value == 8 and key != final['A']:
             final['C'] = key
+        # D and G have 7 (but we know D)
         elif value == 7 and key != final['D']:
             final['G'] = key
-    # A and C have 8 (but we know A)
-    # D and G have 7 (but we know D)
-    print(final)
 
+    # We can now decode the signal
     output_code = signal[1].split(' ')
     code_sets = [set(code) for code in output_code]
-    print(code_sets)
 
     digit_codes = {}
     for digit, letters in digits.items():
         digit_codes[digit] = set([final[letter] for letter in letters])
-    print(digit_codes)
 
     num_string = ''
     for code in code_sets:
