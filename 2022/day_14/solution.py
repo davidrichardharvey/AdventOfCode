@@ -1,6 +1,6 @@
 import numpy as np
 
-with open("example.txt") as file:
+with open("input.txt") as file:
     raw = file.readlines()
 
 max_x = 500
@@ -15,7 +15,7 @@ for line in raw:
     for coords in split:
         x, y = coords.split(",")
         int_x = int(x)
-        int_y = int(y)
+        int_y = int(y) + 1
         max_x = int_x if int_x > max_x else max_x
         min_x = int_x if int_x < min_x else min_x
         max_y = int_y if int_y > max_y else max_y
@@ -25,10 +25,12 @@ for line in raw:
 
 print(paths)
 print(max_x, max_y, min_x, min_y)
-height = max_y - min_y
+height = max_y - min_y + 2
 width = max_x - min_x
 
 cave = np.full((height + 1, width + 1), ".")
+cave[height, :] = '#'
+
 
 for path in paths:
     prev = None
@@ -41,36 +43,56 @@ for path in paths:
             cave[y_start:y_end+1, x_start:x_end+1] = '#'
         prev = coords
 
-def print_cave(cave):
-    for line in cave:
-        print(' '.join(line))
-    print('')
+class Cave:
+    def __init__(self, cave):
+        self.cave = cave
+        self.sand_x_start = 500 - min_x
+        self.sand_y_start = 1
 
-print_cave(cave)
+    def print_cave(self):
+        for line in self.cave:
+            print(' '.join(line))
+        print('')
 
-def drop_sand():
-    sand_x = 500 - min_x
-    sand_y = 0
-    while True:
-        if cave[sand_y + 1, sand_x] == '.':
-            sand_y += 1
-        else:
-            if cave[sand_y + 1, sand_x - 1] == '.':
-                sand_y += 1
-                sand_x -= 1
-            elif cave[sand_y + 1, sand_x + 1] == '.':
-                sand_y += 1
+    def drop_sand(self):
+        sand_x = self.sand_x_start
+        sand_y = self.sand_y_start
+        while True:
+            if sand_x == 0:
+                self.cave = np.insert(self.cave, 0, '.', axis=1)
+                self.cave[height, :] = '#'
                 sand_x += 1
+                self.sand_x_start += 1
+            elif sand_x == self.cave.shape[-1] - 1:
+                self.cave = np.append(self.cave, np.full((height+1, 1), '.'), axis=1)
+                self.cave[height, :] = '#'
+
+            if self.cave[sand_y + 1, sand_x] == '.':
+                sand_y += 1
             else:
-                break
-    cave[sand_y, sand_x] = 'o'
+                if self.cave[sand_y + 1, sand_x - 1] == '.':
+                    sand_y += 1
+                    sand_x -= 1
+                elif self.cave[sand_y + 1, sand_x + 1] == '.':
+                    sand_y += 1
+                    sand_x += 1
+                else:
+                    break
+
+        self.cave[sand_y, sand_x] = 'o'
+
+    def check_finish(self):
+        return self.cave[self.sand_y_start, self.sand_x_start] == 'o'
+
+c = Cave(cave)
 
 s = 0
 while True:
-    try:
-        drop_sand()
-        print_cave(cave)
-        s += 1
-    except:
+    c.drop_sand()
+    s += 1
+    if c.check_finish():
+        print("FINISHED")
+        c.print_cave()
         print(s)
         break
+
